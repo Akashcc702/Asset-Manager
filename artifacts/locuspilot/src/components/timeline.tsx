@@ -54,7 +54,7 @@ export function Timeline({ logs }: { logs: AgentActionLog[] }) {
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
-            {log.actionPayload && (
+            {log.actionPayload != null && Object.keys(log.actionPayload as Record<string, unknown>).length > 0 && (
               <div className="mt-3 bg-muted/50 rounded-lg p-3 overflow-x-auto">
                 <pre className="text-[11px] text-muted-foreground font-mono">
                   {JSON.stringify(log.actionPayload, null, 2)}

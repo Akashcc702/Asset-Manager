@@ -3,9 +3,8 @@ import { Timeline } from "@/components/timeline";
 import { useListActivity } from "@workspace/api-client-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDebounce } from "@/lib/use-debounce"; // Need to write this small hook or just use local state directly
 
 export default function Activity() {
   const [filterId, setFilterId] = useState("");

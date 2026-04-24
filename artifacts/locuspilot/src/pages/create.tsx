@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useParseAgentIntent, useCreatePayment } from "@workspace/api-client-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
-import { Loader2, Bot, Sparkles, ArrowRight } from "lucide-react";
+import { Loader2, Bot, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { DeliveryAction, Currency } from "@workspace/api-client-react";
 
 const formSchema = z.object({
