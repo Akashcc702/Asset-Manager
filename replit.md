@@ -11,17 +11,29 @@ Built for **Locus' Paygentic Hackathon #3** (Week 3 theme: agentic payments + Ch
 
 ## Status
 
-- **Phase 2 complete** — backend, DB schema, agent parser, Locus adapter (mock), end-to-end payment flow.
-- Frontend (React) not yet built.
+- **MVP complete** — end-to-end Landing → Create → Auto-fill → Detail → Simulate Success → Dashboard → Activity flow works.
+- Mock Locus mode by default (`LOCUS_MODE=mock`); real adapter is a stubbed seam.
 
 ## Architecture
 
 ```
 React (Vite)  →  Express API (/api)  →  Postgres (Drizzle)
-                  ├─ services/agentParser    deterministic regex parser
-                  ├─ services/locusAdapter   mock | real (env: LOCUS_MODE)
-                  └─ services/activityLogger writes to agent_action_logs
+artifacts/         artifacts/             lib/db
+locuspilot/        api-server/
+
+API services (artifacts/api-server/src/services):
+  agentParser     — deterministic regex prompt parser
+  locusAdapter    — mock | real (env: LOCUS_MODE), creates checkout requests
+  activityLogger  — writes structured entries to agent_action_logs
 ```
+
+## Pages
+
+- `/` Landing — hero, 3-step explainer, primary CTA
+- `/create` Create — natural-language prompt + AI auto-fill, editable form
+- `/payments/:id` Detail — status, payment URL, agent timeline, simulate-success
+- `/dashboard` Dashboard — totals + recent payments + recent activity
+- `/activity` Activity — full agent action timeline with filter
 
 ## Stack
 

@@ -1,0 +1,70 @@
+Proceed to Phase 3: Build React + Vite frontend in artifacts/locuspilot/.
+
+IMPORTANT PRIORITIES:
+1. Backend flow is PERFECT - do NOT touch or refactor working backend code
+2. Frontend must wire to existing React Query hooks from codegen
+3. Build ALL 6 pages exactly as planned
+4. Keep hackathon demo focus: clean, polished, trustworthy payment UI
+
+FRONTEND REQUIREMENTS (build these pages):
+
+1. LANDING PAGE (/)
+- Hero: "Turn natural-language payment instructions into agentic checkout flows"
+- 3-step how-it-works: Prompt → AI Parse → Auto-deliver
+- Stats: "1-click payments • AI-powered • Locus Checkout integration" 
+- CTA: "Create Payment Request" → /create
+
+2. CREATE PAYMENT (/create)
+- Natural language textarea (full width)
+- "Auto-fill from AI" button → calls /api/agent/parse → populates form
+- Editable form: title, amount, currency, note, delivery action
+- "Create Payment Request" → POST /api/payments → redirect to detail
+
+3. PAYMENT DETAIL (/payments/:id)
+- Payment card with status badge (pending/paid)
+- Timeline of ALL agent actions from /api/payments/:id
+- If mock mode: big "Simulate Payment Success" button
+- Payment URL copy button
+- "Parsed Intent" card showing what AI understood
+
+4. DASHBOARD (/dashboard)
+- Stats cards: total requests, paid %, pending, total collected (₹)
+- Recent payments grid (3-column cards)
+- Quick actions: "New Payment Request"
+
+5. ACTIVITY LOG (/activity)
+- Full timeline of ALL agent actions across payments
+- Filter by payment ID
+- Copy-to-clipboard for each action
+
+6. NOT FOUND (/*)
+- Clean 404 → back to dashboard
+
+UI REQUIREMENTS:
+- Use shadcn/ui components (already available)
+- Clean cards, subtle shadows, status badges (green/orange/red)
+- Mobile responsive (cards stack, nav collapses)
+- Loading states EVERYWHERE (React Query handles this)
+- Empty states: "No payments yet", "No activity"
+- Trust signals: security badges, "Powered by CheckoutWithLocus"
+
+NAVIGATION:
+- Top nav: Logo | Dashboard | Activity | Create New
+- Mobile hamburger
+
+MVP FLOW TO TEST:
+1. Landing → Create → type prompt → Auto-fill → Create → Detail page
+2. Detail → Simulate Success → watch timeline update live
+3. Dashboard → see stats update
+4. Activity → see full log
+
+Deliver Phase 3 complete with:
+- All 6 pages built and wired
+- End-to-end flow verified
+- Mobile responsive
+- Loading/empty/error states
+- Phase 3 summary (files created, what works, run instructions)
+
+Do NOT start polish/UI animations until core 6 pages + flow work.
+
+Start Phase 3 now.
