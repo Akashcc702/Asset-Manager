@@ -5,7 +5,8 @@
  * LocusPilot API — agentic payments backed by CheckoutWithLocus
  * OpenAPI spec version: 0.1.0
  */
+import type { PaymentStatus } from "./paymentStatus";
 
-export interface HealthStatus {
-  status: string;
-}
+export type ListPaymentsParams = {
+  status?: PaymentStatus;
+};

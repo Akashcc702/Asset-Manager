@@ -1,8 +1,27 @@
-# Workspace
+# LocusPilot
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+**LocusPilot** — AI agent for freelancer and digital seller payments.
+A seller types a plain-English instruction (e.g. "Collect ₹199 for Python notes and send the file after payment");
+the agent parses it, creates a CheckoutWithLocus payment request via a mock/real adapter,
+tracks the payment, and triggers the next step (release file, mark milestone, etc.) once paid.
+
+Built for **Locus' Paygentic Hackathon #3** (Week 3 theme: agentic payments + CheckoutWithLocus).
+
+## Status
+
+- **Phase 2 complete** — backend, DB schema, agent parser, Locus adapter (mock), end-to-end payment flow.
+- Frontend (React) not yet built.
+
+## Architecture
+
+```
+React (Vite)  →  Express API (/api)  →  Postgres (Drizzle)
+                  ├─ services/agentParser    deterministic regex parser
+                  ├─ services/locusAdapter   mock | real (env: LOCUS_MODE)
+                  └─ services/activityLogger writes to agent_action_logs
+```
 
 ## Stack
 

@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
-}
+export type ListActivityParams = {
+  paymentId?: number;
+  /**
+   * @maximum 200
+   */
+  limit?: number;
+};

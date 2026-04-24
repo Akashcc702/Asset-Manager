@@ -6,6 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
-}
+export type Currency = (typeof Currency)[keyof typeof Currency];
+
+export const Currency = {
+  INR: "INR",
+  USD: "USD",
+  EUR: "EUR",
+  GBP: "GBP",
+} as const;

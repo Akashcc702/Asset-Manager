@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: LocusPilot API — agentic payments backed by CheckoutWithLocus
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: agent
+    description: AI agent intent parsing
+  - name: payments
+    description: Payment request lifecycle (CheckoutWithLocus adapter)
+  - name: activity
+    description: Agent activity log
+  - name: dashboard
+    description: Aggregate dashboard stats
 paths:
   /healthz:
     get:
@@ -24,6 +32,158 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /agent/parse:
+    post:
+      operationId: parseAgentIntent
+      tags: [agent]
+      summary: Parse a natural-language payment instruction
+      description: |
+        Uses a deterministic rule-based parser (with optional LLM enhancement)
+        to extract a structured payment intent from a free-text prompt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParseIntentRequest"
+      responses:
+        "200":
+          description: Parsed intent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParsedIntent"
+
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List payment requests
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            $ref: "#/components/schemas/PaymentStatus"
+      responses:
+        "200":
+          description: Payment requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentRequest"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Create a payment request via the CheckoutWithLocus adapter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentRequest"
+
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      tags: [payments]
+      summary: Get a payment request by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentRequestWithLogs"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /payments/{id}/simulate-success:
+    post:
+      operationId: simulatePaymentSuccess
+      tags: [payments]
+      summary: Simulate a successful CheckoutWithLocus webhook (mock mode)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentRequestWithLogs"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /activity:
+    get:
+      operationId: listActivity
+      tags: [activity]
+      summary: List agent action log entries
+      parameters:
+        - in: query
+          name: paymentId
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+      responses:
+        "200":
+          description: Activity log
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentActionLog"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Aggregate dashboard counts
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +194,201 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    PaymentStatus:
+      type: string
+      enum: [pending, paid, failed, cancelled]
+
+    DeliveryAction:
+      type: string
+      enum:
+        - none
+        - send_file_after_payment
+        - release_download
+        - mark_milestone_complete
+        - release_source_code
+        - send_invoice_receipt
+
+    Currency:
+      type: string
+      enum: [INR, USD, EUR, GBP]
+      default: INR
+
+    ParseIntentRequest:
+      type: object
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+      required:
+        - prompt
+
+    ParsedIntent:
+      type: object
+      properties:
+        intent:
+          type: string
+        title:
+          type: string
+        amount:
+          type: integer
+          minimum: 0
+        currency:
+          $ref: "#/components/schemas/Currency"
+        deliveryAction:
+          $ref: "#/components/schemas/DeliveryAction"
+        note:
+          type: string
+          nullable: true
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        rawPrompt:
+          type: string
+      required:
+        - intent
+        - title
+        - amount
+        - currency
+        - deliveryAction
+        - confidence
+        - rawPrompt
+
+    CreatePaymentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        amount:
+          type: integer
+          minimum: 1
+        currency:
+          $ref: "#/components/schemas/Currency"
+        note:
+          type: string
+          nullable: true
+        deliveryAction:
+          $ref: "#/components/schemas/DeliveryAction"
+        rawPrompt:
+          type: string
+          nullable: true
+      required:
+        - title
+        - amount
+        - currency
+        - deliveryAction
+
+    PaymentRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        paymentId:
+          type: string
+        title:
+          type: string
+        amount:
+          type: integer
+        currency:
+          $ref: "#/components/schemas/Currency"
+        rawPrompt:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        deliveryAction:
+          $ref: "#/components/schemas/DeliveryAction"
+        status:
+          $ref: "#/components/schemas/PaymentStatus"
+        paymentUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - paymentId
+        - title
+        - amount
+        - currency
+        - deliveryAction
+        - status
+        - createdAt
+        - updatedAt
+
+    AgentActionLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        paymentRequestId:
+          type: integer
+          nullable: true
+        actionType:
+          type: string
+        actionSummary:
+          type: string
+        actionPayload:
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - actionType
+        - actionSummary
+        - createdAt
+
+    PaymentRequestWithLogs:
+      allOf:
+        - $ref: "#/components/schemas/PaymentRequest"
+        - type: object
+          properties:
+            logs:
+              type: array
+              items:
+                $ref: "#/components/schemas/AgentActionLog"
+          required:
+            - logs
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalRequests:
+          type: integer
+        paidRequests:
+          type: integer
+        pendingRequests:
+          type: integer
+        totalCollectedMinor:
+          type: integer
+          description: Total collected amount in minor units (sum of paid)
+        recentPayments:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentRequest"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentActionLog"
+      required:
+        - totalRequests
+        - paidRequests
+        - pendingRequests
+        - totalCollectedMinor
+        - recentPayments
+        - recentActivity
