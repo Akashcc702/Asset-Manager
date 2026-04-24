@@ -1,0 +1,349 @@
+Act as a world-class senior hackathon engineer, product architect, prompt engineer, UI/UX designer, and FastAPI full-stack developer.
+
+You are building a hackathon-ready MVP for “Locus’ Paygentic Hackathon #3”.
+This hackathon’s Week 3 theme is: “Using CheckoutWithLocus to leverage the full suite of Locus’s offerings.”
+The app must strongly fit the theme of agentic payments and CheckoutWithLocus integration. [Do not ignore this.]
+
+PROJECT GOAL:
+Build a complete, clean, demo-ready AI agent web app called:
+
+LocusPilot
+Tagline: AI agent for freelancer and digital seller payments
+
+CORE IDEA:
+A seller/freelancer enters a service or product request in plain English, such as:
+- “Create a payment request for logo design worth ₹999”
+- “Collect ₹199 for Python notes and release the download after payment”
+- “Create milestone 1 payment for website design”
+
+The AI agent should:
+1. Understand the seller’s intent
+2. Extract structured payment info
+3. Create or simulate a CheckoutWithLocus payment request
+4. Track payment status
+5. Trigger the next action after successful payment
+6. Show all actions in a simple dashboard/activity log
+
+IMPORTANT:
+This is a hackathon MVP. Prioritize:
+- Working demo
+- Clean architecture
+- Theme alignment
+- Fast build speed
+- Easy deployment
+- Strong README
+- Simple but polished UI
+
+DO NOT build a giant SaaS.
+DO NOT add unnecessary complexity.
+DO NOT build features that risk breaking the demo.
+
+TECH STACK:
+- Backend: Python FastAPI
+- Frontend: simple HTML/CSS/JS OR lightweight React only if necessary
+- Styling: clean modern responsive UI
+- Database: SQLite for MVP
+- Environment variables via .env
+- Deployment-ready for Replit and cloud
+- If actual Locus API is unavailable, create a clean adapter layer with a mock implementation and a clearly isolated place to plug in real CheckoutWithLocus API calls later
+
+PRODUCT REQUIREMENTS:
+Build these pages/screens:
+1. Landing / app home
+2. Create payment request page
+3. Payment detail / status page
+4. Agent activity log page
+5. Demo-friendly dashboard
+6. Basic error page / fallback states
+
+MAIN USER FLOW:
+1. User types a plain-English request
+2. AI agent parses:
+   - title
+   - amount
+   - currency
+   - customer note
+   - delivery action
+3. App shows confirmation card
+4. User clicks “Create Payment”
+5. Backend generates payment request via Locus adapter
+6. App shows payment link/status
+7. User can simulate payment success if real API/webhook is unavailable
+8. Agent automatically performs next step:
+   - mark milestone complete
+   - unlock digital delivery
+   - show “ready to deliver” status
+9. Activity log captures every step
+
+AI AGENT REQUIREMENTS:
+The agent should not be a useless chatbot.
+It must perform structured decision-making.
+Implement:
+- intent parsing
+- slot extraction
+- action planning
+- payment action decision
+- post-payment action decision
+
+Keep this reliable:
+- Prefer deterministic extraction first
+- Optional LLM layer can enhance parsing
+- Must work even without external LLM
+- Provide fallback parser using regex/rules if no LLM key exists
+
+SAMPLE INTENTS:
+- “Collect 499 rupees for resume review”
+- “Take 199 for my coding notes and send the file after payment”
+- “Create milestone payment of 5000 for app UI design”
+- “Ask client to pay 999 before source code delivery”
+
+OUTPUT OF AGENT:
+Return structured JSON like:
+{
+  "intent": "create_payment_request",
+  "title": "Coding notes",
+  "amount": 199,
+  "currency": "INR",
+  "delivery_action": "send_file_after_payment",
+  "note": "Collect payment before delivery",
+  "confidence": 0.94
+}
+
+BACKEND REQUIREMENTS:
+Create a production-like folder structure:
+- app/
+  - main.py
+  - config.py
+  - schemas.py
+  - models.py
+  - database.py
+  - routes/
+  - services/
+  - static/
+  - templates/
+  - utils/
+- tests/
+- README.md
+- requirements.txt
+- .env.example
+
+Implement:
+- FastAPI app
+- Pydantic models
+- SQLAlchemy models
+- clean service layer
+- proper error handling
+- health route
+- docs route
+- API routes for:
+  - parse prompt
+  - create payment
+  - get payment status
+  - simulate webhook/payment success
+  - list activity logs
+  - list created payment requests
+
+LOCI / PAYMENT ADAPTER REQUIREMENTS:
+Create a dedicated service:
+app/services/locus_adapter.py
+
+It must:
+- expose methods like create_payment(), get_payment_status(), verify_webhook()
+- support two modes:
+  1. mock mode
+  2. real mode placeholder
+- use environment variable like LOCUS_MODE=mock or real
+- include TODO comments showing exactly where real CheckoutWithLocus API integration should be added
+
+In mock mode:
+- create fake payment IDs
+- generate fake hosted payment link
+- allow simulate success button
+- persist payment state in DB
+
+DATABASE TABLES:
+Create at least:
+- PaymentRequest
+- AgentActionLog
+- Optional UserSession
+
+FIELDS:
+PaymentRequest:
+- id
+- payment_id
+- title
+- amount
+- currency
+- raw_prompt
+- note
+- delivery_action
+- status
+- payment_url
+- created_at
+- updated_at
+
+AgentActionLog:
+- id
+- payment_request_id
+- action_type
+- action_summary
+- action_payload
+- created_at
+
+UI/UX REQUIREMENTS:
+Design should feel:
+- modern
+- minimal
+- demo-friendly
+- trustworthy
+- payment/product oriented
+
+Use:
+- clean cards
+- subtle shadows
+- responsive layout
+- empty states
+- loading states
+- success states
+- error alerts
+
+Make homepage headline strong:
+“Turn natural-language payment instructions into agentic checkout flows.”
+
+Include these sections:
+- Hero
+- How it works
+- Why it matters
+- Product demo CTA
+
+ON THE DASHBOARD:
+Show:
+- total requests
+- paid requests
+- pending requests
+- recent activity
+- payment cards
+- status badges
+
+CREATE PAYMENT FORM:
+Include fields:
+- natural language request
+- title
+- amount
+- currency
+- note
+- delivery action
+
+Behavior:
+- user can click “Auto-fill from AI”
+- form gets parsed from the prompt
+- user can edit before final creation
+
+DETAIL PAGE:
+Show:
+- parsed intent
+- payment details
+- payment link
+- current status
+- timeline of actions
+- simulate success button in mock mode
+- post-payment action result
+
+IMPORTANT UX:
+Every page must look polished enough for a hackathon demo.
+The app must not feel like a raw admin panel.
+It should feel like a real startup MVP.
+
+README REQUIREMENTS:
+Write a strong README with:
+- project title
+- one-line pitch
+- problem
+- solution
+- why this matters
+- how it uses CheckoutWithLocus
+- features
+- architecture
+- setup steps
+- environment variables
+- demo flow
+- future improvements
+- hackathon relevance
+
+DEPLOYMENT REQUIREMENTS:
+Make it easy to run on Replit and cloud.
+Provide:
+- requirements.txt
+- run instructions
+- uvicorn startup command
+- .env.example
+
+QUALITY REQUIREMENTS:
+- no placeholder lorem ipsum
+- no broken links
+- no fake unused features
+- no giant unfinished modules
+- no overengineering
+- readable code
+- comments only where needed
+- mobile responsive
+- clean demo data seed if useful
+
+DELIVERY INSTRUCTIONS:
+Work in phases and do not jump randomly.
+
+PHASE 1:
+Generate folder structure and implementation plan.
+
+PHASE 2:
+Build backend models, schemas, database, and services.
+
+PHASE 3:
+Build AI parsing layer and Locus adapter.
+
+PHASE 4:
+Build frontend templates/static UI.
+
+PHASE 5:
+Connect frontend to backend routes.
+
+PHASE 6:
+Add mock payment simulation and action timeline.
+
+PHASE 7:
+Write README and deployment instructions.
+
+PHASE 8:
+Run the app, fix errors, and verify core flow end-to-end.
+
+VERY IMPORTANT:
+After each phase:
+- summarize what was completed
+- list created/modified files
+- mention the next exact step
+- do not silently skip failures
+- if something breaks, fix it before moving on
+
+NON-NEGOTIABLE MVP FLOW TO VERIFY:
+- app starts successfully
+- homepage loads
+- user enters prompt
+- AI parser extracts structured fields
+- payment request is created
+- payment record is saved
+- mock payment success can be triggered
+- status changes to paid
+- post-payment action is logged
+- dashboard reflects new state
+
+If any optional LLM/API key is missing:
+- continue in fallback deterministic mode
+- do not fail the build
+
+Now start with PHASE 1 only.
+First show:
+1. final folder structure
+2. architecture summary
+3. implementation plan
+4. assumptions
+Then wait for confirmation before coding.
