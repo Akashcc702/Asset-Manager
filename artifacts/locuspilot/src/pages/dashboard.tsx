@@ -1,15 +1,28 @@
 import { Layout } from "@/components/layout";
-import { useGetDashboardSummary, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+import { useGetDashboardSummary, getGetDashboardSummaryQueryKey, type PaymentStatus } from "@workspace/api-client-react";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Plus, Activity, Wallet, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Plus, Wallet, Clock, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+
+type StatusFilter = "all" | PaymentStatus;
+
+const FILTER_LABELS: Record<StatusFilter, string> = {
+  all: "All",
+  paid: "Paid",
+  pending: "Pending",
+  failed: "Failed",
+  cancelled: "Cancelled",
+};
 
 export default function Dashboard() {
   const { data: summary, isLoading, isError } = useGetDashboardSummary();
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   if (isLoading) {
     return (
@@ -49,6 +62,19 @@ export default function Dashboard() {
 
   const totals = summary.totalsByCurrency ?? [];
   const isMultiCurrency = totals.length > 1;
+
+  // Build the set of available filters dynamically — always show All / Paid / Pending,
+  // and only surface Failed / Cancelled when at least one such payment exists in the
+  // currently loaded recent payments. Frontend-only filtering, no extra API calls.
+  const presentStatuses = new Set(summary.recentPayments.map((p) => p.status));
+  const availableFilters: StatusFilter[] = ["all", "paid", "pending"];
+  if (presentStatuses.has("failed")) availableFilters.push("failed");
+  if (presentStatuses.has("cancelled")) availableFilters.push("cancelled");
+
+  const filteredRecentPayments =
+    statusFilter === "all"
+      ? summary.recentPayments
+      : summary.recentPayments.filter((p) => p.status === statusFilter);
 
   return (
     <Layout>
@@ -118,24 +144,52 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
-          <Card className="shadow-sm border-border/60">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Paid Requests</CardTitle>
+          <button
+            type="button"
+            onClick={() => setStatusFilter((s) => (s === "paid" ? "all" : "paid"))}
+            aria-pressed={statusFilter === "paid"}
+            className={cn(
+              "text-left rounded-xl border bg-card shadow-sm transition-all",
+              "hover:shadow-md hover:border-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400",
+              statusFilter === "paid"
+                ? "border-emerald-500 ring-2 ring-emerald-200"
+                : "border-border/60",
+            )}
+          >
+            <div className="flex flex-row items-center justify-between p-6 pb-2">
+              <span className="text-sm font-medium text-muted-foreground">Paid Requests</span>
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-6 pb-6">
               <div className="text-2xl font-bold">{summary.paidRequests}</div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-border/60">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {statusFilter === "paid" ? "Filter active. Tap to clear." : "Tap to filter recent payments"}
+              </p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter((s) => (s === "pending" ? "all" : "pending"))}
+            aria-pressed={statusFilter === "pending"}
+            className={cn(
+              "text-left rounded-xl border bg-card shadow-sm transition-all",
+              "hover:shadow-md hover:border-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400",
+              statusFilter === "pending"
+                ? "border-amber-500 ring-2 ring-amber-200"
+                : "border-border/60",
+            )}
+          >
+            <div className="flex flex-row items-center justify-between p-6 pb-2">
+              <span className="text-sm font-medium text-muted-foreground">Pending</span>
               <Clock className="h-4 w-4 text-amber-500" />
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-6 pb-6">
               <div className="text-2xl font-bold">{summary.pendingRequests}</div>
-            </CardContent>
-          </Card>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {statusFilter === "pending" ? "Filter active. Tap to clear." : "Tap to filter recent payments"}
+              </p>
+            </div>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -147,7 +201,46 @@ export default function Dashboard() {
                 View all
               </Link>
             </div>
-            
+
+            {/* Status filter pills */}
+            {summary.recentPayments.length > 0 && (
+              <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter recent payments by status">
+                {availableFilters.map((f) => {
+                  const active = statusFilter === f;
+                  const count =
+                    f === "all"
+                      ? summary.recentPayments.length
+                      : summary.recentPayments.filter((p) => p.status === f).length;
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setStatusFilter(f)}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                        active
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-background text-foreground border-border hover:bg-muted/60",
+                      )}
+                    >
+                      {FILTER_LABELS[f]}
+                      <span
+                        className={cn(
+                          "inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold tabular-nums",
+                          active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {summary.recentPayments.length === 0 ? (
               <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed">
                 <p className="text-muted-foreground">No payments yet</p>
@@ -155,9 +248,22 @@ export default function Dashboard() {
                   <Button variant="link" className="mt-2 text-primary">Create your first payment</Button>
                 </Link>
               </div>
+            ) : filteredRecentPayments.length === 0 ? (
+              <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed">
+                <p className="text-muted-foreground">
+                  No {FILTER_LABELS[statusFilter].toLowerCase()} payments
+                </p>
+                <Button
+                  variant="link"
+                  className="mt-2 text-primary"
+                  onClick={() => setStatusFilter("all")}
+                >
+                  Show all payments
+                </Button>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {summary.recentPayments.map(payment => (
+                {filteredRecentPayments.map(payment => (
                   <Link key={payment.id} href={`/payments/${payment.id}`}>
                     <Card className="hover:shadow-md transition-all cursor-pointer h-full border-border/60 hover:border-primary/30 flex flex-col">
                       <CardHeader className="p-4 pb-2">
