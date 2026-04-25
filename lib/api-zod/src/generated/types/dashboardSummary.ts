@@ -6,14 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AgentActionLog } from "./agentActionLog";
+import type { CurrencyTotal } from "./currencyTotal";
 import type { PaymentRequest } from "./paymentRequest";
 
 export interface DashboardSummary {
   totalRequests: number;
   paidRequests: number;
   pendingRequests: number;
-  /** Total collected amount in minor units (sum of paid) */
-  totalCollectedMinor: number;
+  /** Per-currency paid totals. Empty when no paid payments exist. Multiple entries when payments span more than one currency. */
+  totalsByCurrency: CurrencyTotal[];
   recentPayments: PaymentRequest[];
   recentActivity: AgentActionLog[];
 }

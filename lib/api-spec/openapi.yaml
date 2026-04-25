@@ -365,6 +365,23 @@ components:
           required:
             - logs
 
+    CurrencyTotal:
+      type: object
+      description: Paid total for a single currency. Currencies are NEVER summed across each other.
+      properties:
+        currency:
+          $ref: "#/components/schemas/Currency"
+        totalMinor:
+          type: integer
+          description: Sum of paid amounts for this currency, in major units (integers).
+        count:
+          type: integer
+          description: Number of paid payments in this currency.
+      required:
+        - currency
+        - totalMinor
+        - count
+
     DashboardSummary:
       type: object
       properties:
@@ -374,9 +391,11 @@ components:
           type: integer
         pendingRequests:
           type: integer
-        totalCollectedMinor:
-          type: integer
-          description: Total collected amount in minor units (sum of paid)
+        totalsByCurrency:
+          type: array
+          description: Per-currency paid totals. Empty when no paid payments exist. Multiple entries when payments span more than one currency.
+          items:
+            $ref: "#/components/schemas/CurrencyTotal"
         recentPayments:
           type: array
           items:
@@ -389,6 +408,6 @@ components:
         - totalRequests
         - paidRequests
         - pendingRequests
-        - totalCollectedMinor
+        - totalsByCurrency
         - recentPayments
         - recentActivity

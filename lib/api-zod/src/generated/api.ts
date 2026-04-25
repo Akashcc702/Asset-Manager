@@ -236,15 +236,38 @@ export const ListActivityResponse = zod.array(ListActivityResponseItem);
 /**
  * @summary Aggregate dashboard counts
  */
+export const getDashboardSummaryResponseTotalsByCurrencyItemCurrencyDefault = `INR`;
 export const getDashboardSummaryResponseRecentPaymentsItemCurrencyDefault = `INR`;
 
 export const GetDashboardSummaryResponse = zod.object({
   totalRequests: zod.number(),
   paidRequests: zod.number(),
   pendingRequests: zod.number(),
-  totalCollectedMinor: zod
-    .number()
-    .describe("Total collected amount in minor units (sum of paid)"),
+  totalsByCurrency: zod
+    .array(
+      zod
+        .object({
+          currency: zod
+            .enum(["INR", "USD", "EUR", "GBP"])
+            .default(
+              getDashboardSummaryResponseTotalsByCurrencyItemCurrencyDefault,
+            ),
+          totalMinor: zod
+            .number()
+            .describe(
+              "Sum of paid amounts for this currency, in major units (integers).",
+            ),
+          count: zod
+            .number()
+            .describe("Number of paid payments in this currency."),
+        })
+        .describe(
+          "Paid total for a single currency. Currencies are NEVER summed across each other.",
+        ),
+    )
+    .describe(
+      "Per-currency paid totals. Empty when no paid payments exist. Multiple entries when payments span more than one currency.",
+    ),
   recentPayments: zod.array(
     zod.object({
       id: zod.number(),

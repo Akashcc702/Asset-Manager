@@ -47,10 +47,8 @@ export default function Dashboard() {
     );
   }
 
-  // Assuming totalCollectedMinor is in major units or needs no formatting division per instructions
-  // The API spec says "minor units" but instructions say "Amounts are integers in major units (no decimals). Do NOT divide by 100."
-  // Wait, I'll trust the instructions and format the raw number.
-  const currencyFallback = summary.recentPayments.find(p => p.status === "paid")?.currency || "INR";
+  const totals = summary.totalsByCurrency ?? [];
+  const isMultiCurrency = totals.length > 1;
 
   return (
     <Layout>
@@ -71,13 +69,53 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="shadow-sm border-border/60">
+          <Card className="shadow-sm border-border/60 sm:col-span-2 md:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Collected</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {isMultiCurrency ? "Collected by Currency" : "Total Collected"}
+              </CardTitle>
               <Wallet className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(summary.totalCollectedMinor, currencyFallback)}</div>
+              {totals.length === 0 ? (
+                <>
+                  <div className="text-2xl font-bold text-muted-foreground">--</div>
+                  <p className="text-xs text-muted-foreground mt-1">No paid payments yet</p>
+                </>
+              ) : totals.length === 1 ? (
+                <>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(totals[0].totalMinor, totals[0].currency)}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {totals[0].count} paid {totals[0].count === 1 ? "payment" : "payments"} in {totals[0].currency}
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-1.5">
+                  {totals.map((row) => (
+                    <div
+                      key={row.currency}
+                      className="flex items-baseline justify-between gap-3"
+                    >
+                      <div className="flex items-baseline gap-2 min-w-0">
+                        <span className="text-[11px] font-mono font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {row.currency}
+                        </span>
+                        <span className="text-lg font-bold tabular-nums truncate">
+                          {formatCurrency(row.totalMinor, row.currency)}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {row.count} paid
+                      </span>
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-muted-foreground pt-1.5 border-t border-border/40">
+                    Currencies are not summed across each other.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card className="shadow-sm border-border/60">
@@ -96,15 +134,6 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.pendingRequests}</div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-border/60">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Requests</CardTitle>
-              <Activity className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.totalRequests}</div>
             </CardContent>
           </Card>
         </div>

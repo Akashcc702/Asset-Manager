@@ -103,12 +103,23 @@ export type PaymentRequestWithLogs = PaymentRequest & {
   logs: AgentActionLog[];
 };
 
+/**
+ * Paid total for a single currency. Currencies are NEVER summed across each other.
+ */
+export interface CurrencyTotal {
+  currency: Currency;
+  /** Sum of paid amounts for this currency, in major units (integers). */
+  totalMinor: number;
+  /** Number of paid payments in this currency. */
+  count: number;
+}
+
 export interface DashboardSummary {
   totalRequests: number;
   paidRequests: number;
   pendingRequests: number;
-  /** Total collected amount in minor units (sum of paid) */
-  totalCollectedMinor: number;
+  /** Per-currency paid totals. Empty when no paid payments exist. Multiple entries when payments span more than one currency. */
+  totalsByCurrency: CurrencyTotal[];
   recentPayments: PaymentRequest[];
   recentActivity: AgentActionLog[];
 }

@@ -9,6 +9,7 @@
 export * from "./agentActionLog";
 export * from "./createPaymentRequest";
 export * from "./currency";
+export * from "./currencyTotal";
 export * from "./dashboardSummary";
 export * from "./deliveryAction";
 export * from "./errorResponse";
