@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { useGetPayment, useSimulatePaymentSuccess } from "@workspace/api-client-react";
 import { useRoute, Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { Copy, ExternalLink, Loader2, PlayCircle, AlertCircle, RefreshCcw } from "lucide-react";
+import { Copy, ExternalLink, Loader2, PlayCircle, AlertCircle, RefreshCcw, TestTube2 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetPaymentQueryKey, getGetDashboardSummaryQueryKey, getListActivityQueryKey } from "@workspace/api-client-react";
+import { isMockCheckoutUrl } from "@/lib/mock-mode";
 
 export default function PaymentDetail() {
   const [, params] = useRoute("/payments/:id");
@@ -126,24 +127,49 @@ export default function PaymentDetail() {
               </div>
               <CardContent className="p-6 md:p-8 space-y-8">
                 
-                {payment.paymentUrl && (
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium">Checkout Link</label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-muted p-3 rounded-lg border font-mono text-sm truncate text-muted-foreground">
-                        {payment.paymentUrl}
+                {payment.paymentUrl && (() => {
+                  const mock = isMockCheckoutUrl(payment.paymentUrl);
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="text-sm font-medium">Checkout Link</label>
+                        {mock && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-800">
+                            <TestTube2 className="h-3 w-3" />
+                            Mock mode
+                          </span>
+                        )}
                       </div>
-                      <Button variant="outline" size="icon" onClick={handleCopyLink} title="Copy link">
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="icon" asChild title="Open link">
-                        <a href={payment.paymentUrl} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-muted p-3 rounded-lg border font-mono text-sm truncate text-muted-foreground">
+                          {payment.paymentUrl}
+                        </div>
+                        <Button variant="outline" size="icon" onClick={handleCopyLink} title={mock ? "Copy demo link" : "Copy link"}>
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        {mock ? (
+                          <Button asChild title="Open the internal demo checkout page">
+                            <Link href={`/mock-checkout/${payment.id}`}>
+                              <TestTube2 className="w-4 h-4 mr-2" />
+                              Open demo checkout
+                            </Link>
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="icon" asChild title="Open the live CheckoutWithLocus checkout">
+                            <a href={payment.paymentUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        {mock
+                          ? "Mock mode is on, so this URL is not publicly reachable. The Open button routes to an internal demo checkout that mirrors the real CheckoutWithLocus flow."
+                          : "Live CheckoutWithLocus session. Share this URL with your customer to collect payment."}
+                      </p>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t">
                   <div>

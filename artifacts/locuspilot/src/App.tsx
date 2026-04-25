@@ -7,6 +7,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import CreatePayment from "@/pages/create";
 import PaymentDetail from "@/pages/payment-detail";
+import MockCheckout from "@/pages/mock-checkout";
 import Activity from "@/pages/activity";
 import NotFound from "@/pages/not-found";
 
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/create" component={CreatePayment} />
       <Route path="/payments/:id" component={PaymentDetail} />
+      <Route path="/mock-checkout/:id" component={MockCheckout} />
       <Route path="/activity" component={Activity} />
       <Route component={NotFound} />
     </Switch>
