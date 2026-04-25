@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Plus, Wallet, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Plus, Wallet, Clock, CheckCircle2, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ const FILTER_LABELS: Record<StatusFilter, string> = {
 export default function Dashboard() {
   const { data: summary, isLoading, isError } = useGetDashboardSummary();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [currencyFilter, setCurrencyFilter] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -71,10 +72,14 @@ export default function Dashboard() {
   if (presentStatuses.has("failed")) availableFilters.push("failed");
   if (presentStatuses.has("cancelled")) availableFilters.push("cancelled");
 
-  const filteredRecentPayments =
-    statusFilter === "all"
-      ? summary.recentPayments
-      : summary.recentPayments.filter((p) => p.status === statusFilter);
+  const filteredRecentPayments = summary.recentPayments.filter((p) => {
+    if (statusFilter !== "all" && p.status !== statusFilter) return false;
+    if (currencyFilter && p.currency !== currencyFilter) return false;
+    return true;
+  });
+
+  const toggleCurrency = (c: string) =>
+    setCurrencyFilter((cur) => (cur === c ? null : c));
 
   return (
     <Layout>
@@ -118,27 +123,45 @@ export default function Dashboard() {
                   </p>
                 </>
               ) : (
-                <div className="space-y-1.5">
-                  {totals.map((row) => (
-                    <div
-                      key={row.currency}
-                      className="flex items-baseline justify-between gap-3"
-                    >
-                      <div className="flex items-baseline gap-2 min-w-0">
-                        <span className="text-[11px] font-mono font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                          {row.currency}
+                <div className="space-y-1">
+                  {totals.map((row) => {
+                    const active = currencyFilter === row.currency;
+                    return (
+                      <button
+                        key={row.currency}
+                        type="button"
+                        onClick={() => toggleCurrency(row.currency)}
+                        aria-pressed={active}
+                        title={active ? `Clear ${row.currency} filter` : `Filter recent payments to ${row.currency}`}
+                        className={cn(
+                          "w-full flex items-baseline justify-between gap-3 rounded-md px-2 py-1.5 transition-all border",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                          active
+                            ? "bg-primary/5 border-primary/40 ring-1 ring-primary/30"
+                            : "bg-transparent border-transparent hover:bg-muted/60 hover:border-border",
+                        )}
+                      >
+                        <div className="flex items-baseline gap-2 min-w-0">
+                          <span className={cn(
+                            "text-[11px] font-mono font-medium px-1.5 py-0.5 rounded",
+                            active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+                          )}>
+                            {row.currency}
+                          </span>
+                          <span className="text-lg font-bold tabular-nums truncate">
+                            {formatCurrency(row.totalMinor, row.currency)}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {row.count} paid
                         </span>
-                        <span className="text-lg font-bold tabular-nums truncate">
-                          {formatCurrency(row.totalMinor, row.currency)}
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {row.count} paid
-                      </span>
-                    </div>
-                  ))}
+                      </button>
+                    );
+                  })}
                   <p className="text-[11px] text-muted-foreground pt-1.5 border-t border-border/40">
-                    Currencies are not summed across each other.
+                    {currencyFilter
+                      ? <>Filtering recent payments by <span className="font-mono font-semibold">{currencyFilter}</span>. Tap row to clear.</>
+                      : "Tap a currency to filter recent payments."}
                   </p>
                 </div>
               )}
@@ -202,6 +225,22 @@ export default function Dashboard() {
               </Link>
             </div>
 
+            {currencyFilter && (
+              <div className="flex items-center justify-between gap-3 rounded-lg border bg-primary/5 border-primary/20 px-3 py-2">
+                <p className="text-sm text-foreground">
+                  Showing <span className="font-mono font-semibold">{currencyFilter}</span> payments
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCurrencyFilter(null)}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded"
+                >
+                  <X className="h-3 w-3" />
+                  All currencies
+                </button>
+              </div>
+            )}
+
             {/* Status filter pills */}
             {summary.recentPayments.length > 0 && (
               <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter recent payments by status">
@@ -251,14 +290,17 @@ export default function Dashboard() {
             ) : filteredRecentPayments.length === 0 ? (
               <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed">
                 <p className="text-muted-foreground">
-                  No {FILTER_LABELS[statusFilter].toLowerCase()} payments
+                  No recent {statusFilter !== "all" ? FILTER_LABELS[statusFilter].toLowerCase() + " " : ""}{currencyFilter ?? ""} payments
                 </p>
                 <Button
                   variant="link"
                   className="mt-2 text-primary"
-                  onClick={() => setStatusFilter("all")}
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setCurrencyFilter(null);
+                  }}
                 >
-                  Show all payments
+                  Clear filters
                 </Button>
               </div>
             ) : (
