@@ -34,7 +34,7 @@ router.get("/dashboard/summary", async (_req, res) => {
     .select()
     .from(paymentRequestsTable)
     .orderBy(desc(paymentRequestsTable.createdAt))
-    .limit(5);
+    .limit(12);
 
   const recentActivity = await db
     .select()
