@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetPaymentQueryKey, getGetDashboardSummaryQueryKey, getListActivityQueryKey } from "@workspace/api-client-react";
 import { isMockCheckoutUrl } from "@/lib/mock-mode";
+import { getDeliveryActionMeta } from "@/lib/delivery-action";
 
 export default function PaymentDetail() {
   const [, params] = useRoute("/payments/:id");
@@ -174,9 +175,21 @@ export default function PaymentDetail() {
                 <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t">
                   <div>
                     <div className="text-sm font-medium text-muted-foreground mb-1">Delivery Action</div>
-                    <div className="font-medium bg-primary/5 text-primary inline-flex px-2 py-1 rounded text-sm">
-                      {payment.deliveryAction}
-                    </div>
+                    {(() => {
+                      const meta = getDeliveryActionMeta(payment.deliveryAction);
+                      return (
+                        <>
+                          <div className="font-medium bg-primary/5 text-primary inline-flex px-2 py-1 rounded text-sm">
+                            {meta.label}
+                          </div>
+                          {meta.description && (
+                            <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
+                              {meta.description}
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   {payment.note && (
                     <div>

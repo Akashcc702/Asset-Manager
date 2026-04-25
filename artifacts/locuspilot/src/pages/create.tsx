@@ -213,8 +213,8 @@ export default function CreatePayment() {
                         <SelectContent>
                           <SelectItem value="none">None (just collect payment)</SelectItem>
                           <SelectItem value="send_file_after_payment">Send file after payment</SelectItem>
-                          <SelectItem value="release_download">Release digital download</SelectItem>
-                          <SelectItem value="mark_milestone_complete">Mark milestone as complete</SelectItem>
+                          <SelectItem value="release_download">Download Invoice</SelectItem>
+                          <SelectItem value="mark_milestone_complete">Mark milestone complete</SelectItem>
                           <SelectItem value="release_source_code">Release source code</SelectItem>
                           <SelectItem value="send_invoice_receipt">Send invoice receipt</SelectItem>
                         </SelectContent>

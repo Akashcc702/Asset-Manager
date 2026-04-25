@@ -4,6 +4,23 @@ import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { getDeliveryActionLabel } from "@/lib/delivery-action";
+
+function humanizePayload(payload: unknown): unknown {
+  if (Array.isArray(payload)) return payload.map(humanizePayload);
+  if (payload && typeof payload === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(payload as Record<string, unknown>)) {
+      if (k === "deliveryAction" && typeof v === "string") {
+        out[k] = `${v}  (${getDeliveryActionLabel(v)})`;
+      } else {
+        out[k] = humanizePayload(v);
+      }
+    }
+    return out;
+  }
+  return payload;
+}
 
 export function Timeline({ logs }: { logs: AgentActionLog[] }) {
   if (!logs || logs.length === 0) {
@@ -57,7 +74,7 @@ export function Timeline({ logs }: { logs: AgentActionLog[] }) {
             {log.actionPayload != null && Object.keys(log.actionPayload as Record<string, unknown>).length > 0 && (
               <div className="mt-3 bg-muted/50 rounded-lg p-3 overflow-x-auto">
                 <pre className="text-[11px] text-muted-foreground font-mono">
-                  {JSON.stringify(log.actionPayload, null, 2)}
+                  {JSON.stringify(humanizePayload(log.actionPayload), null, 2)}
                 </pre>
               </div>
             )}
