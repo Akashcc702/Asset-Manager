@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useGetPayment, useSimulatePaymentSuccess } from "@workspace/api-client-react";
 import { useRoute, Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { Copy, ExternalLink, Loader2, PlayCircle, AlertCircle, RefreshCcw, TestTube2 } from "lucide-react";
+import { Copy, ExternalLink, Loader2, PlayCircle, AlertCircle, RefreshCcw, TestTube2, CheckCircle2, Clock, MinusCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -174,19 +174,62 @@ export default function PaymentDetail() {
 
                 <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t">
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Delivery Action</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Post-payment Action
+                    </div>
                     {(() => {
                       const meta = getDeliveryActionMeta(payment.deliveryAction);
+                      const isNoop = (payment.deliveryAction as string) === "no_action" || (payment.deliveryAction as string) === "none";
+                      const wasExecuted = payment.logs.some(
+                        (l) => l.actionType === "post_payment_action_executed"
+                      );
+                      let statusLabel = "Not triggered";
+                      let StatusIcon = MinusCircle;
+                      let statusClass =
+                        "bg-muted text-muted-foreground border-border";
+                      if (isNoop) {
+                        statusLabel = "No automation";
+                        StatusIcon = MinusCircle;
+                      } else if (wasExecuted) {
+                        statusLabel = "Completed";
+                        StatusIcon = CheckCircle2;
+                        statusClass =
+                          "bg-emerald-50 text-emerald-700 border-emerald-200";
+                      } else if (payment.status === "paid") {
+                        statusLabel = "Pending";
+                        StatusIcon = Clock;
+                        statusClass =
+                          "bg-amber-50 text-amber-700 border-amber-200";
+                      } else if (payment.status === "pending") {
+                        statusLabel = "Will run after payment";
+                        StatusIcon = Clock;
+                        statusClass =
+                          "bg-sky-50 text-sky-700 border-sky-200";
+                      }
                       return (
                         <>
-                          <div className="font-medium bg-primary/5 text-primary inline-flex px-2 py-1 rounded text-sm">
-                            {meta.label}
+                          <div className="rounded-lg border bg-muted/40 px-3 py-2.5">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <span className="text-sm font-semibold text-foreground">
+                                {meta.label}
+                              </span>
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${statusClass}`}
+                              >
+                                <StatusIcon className="h-3 w-3" />
+                                {statusLabel}
+                              </span>
+                            </div>
+                            {meta.description && (
+                              <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
+                                {meta.description}
+                              </p>
+                            )}
                           </div>
-                          {meta.description && (
-                            <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
-                              {meta.description}
-                            </p>
-                          )}
+                          <p className="mt-1.5 text-[11px] text-muted-foreground italic">
+                            Configured automation. The agent runs this on its own — there is no manual button.
+                          </p>
                         </>
                       );
                     })()}
