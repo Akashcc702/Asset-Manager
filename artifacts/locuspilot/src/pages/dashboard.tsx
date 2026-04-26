@@ -218,11 +218,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Payments */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between min-h-[28px]">
               <h2 className="text-xl font-bold tracking-tight">Recent payments</h2>
-              <Link href="/activity" className="text-sm font-medium text-primary hover:underline">
-                View all
-              </Link>
             </div>
 
             {currencyFilter && (
@@ -329,7 +326,12 @@ export default function Dashboard() {
 
           {/* Recent Activity */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold tracking-tight">Agent activity</h2>
+            <div className="flex items-center justify-between min-h-[28px]">
+              <h2 className="text-xl font-bold tracking-tight">Agent activity</h2>
+              <Link href="/activity" className="text-sm font-medium text-primary hover:underline">
+                View all
+              </Link>
+            </div>
             <Card className="border-border/60">
               <CardContent className="p-0">
                 {summary.recentActivity.length === 0 ? (
